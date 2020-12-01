@@ -145,14 +145,14 @@ class SessionRefresh(MiddlewareMixin):
         client_id = self.OIDC_RP_CLIENT_ID
         state = get_random_string(self.OIDC_STATE_SIZE)
 
-	# Test code
-	
-	#code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
-	#code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
-	#code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-	#code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
-	#code_challenge = code_challenge.replace('=', '')
-	code_challenge = 'n6DNrm8ZWb3H20zFz62rj9avucbefafrs4B_xMGwtVM'
+        # Test code
+
+        #code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
+        #code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
+        #code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+        #code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
+        #code_challenge = code_challenge.replace('=', '')
+        code_challenge = 'n6DNrm8ZWb3H20zFz62rj9avucbefafrs4B_xMGwtVM'
 
         # Build the parameters as if we were doing a real auth handoff, except
         # we also include prompt=none.
