@@ -267,7 +267,7 @@ class OIDCAuthenticationBackend(ModelBackend):
 
         token_payload = {
             'client_id': self.OIDC_RP_CLIENT_ID,
-            'client_secret': self.OIDC_RP_CLIENT_SECRET,
+	    'code_verifier': 'lIxklyV8zVWZHgbp0rP6pQr0qob6pdvilEJXIgjKzwDedOWwEioaw',
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': absolutify(
