@@ -1,4 +1,13 @@
 import time
+import base64
+import hashlib
+import os
+import re
+import platform
+import logging
+#Needed ?
+if platform.system() == 'Windows':
+    import pythoncom            # pylint: disable=import-error
 
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
@@ -19,6 +28,7 @@ except ImportError:
     # Python < 3
     from urllib import urlencode
 
+LOGGER = logging.getLogger(__name__)
 
 class OIDCAuthenticationCallbackView(View):
     """OIDC client authentication callback HTTP endpoint"""
@@ -50,11 +60,15 @@ class OIDCAuthenticationCallbackView(View):
         # using the RenewIDToken middleware.
         expiration_interval = self.get_settings('OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS', 60 * 15)
         self.request.session['oidc_id_token_expiration'] = time.time() + expiration_interval
-
+        LOGGER.debug('success_url = %s', self.success_url)
         return HttpResponseRedirect(self.success_url)
 
     def get(self, request):
         """Callback handler for OIDC authorization code flow"""
+        #Needed ?
+        if platform.system() == 'Windows':
+            # Needed for each thread.
+            pythoncom.CoInitialize()
 
         if request.GET.get('error'):
             # Ouch! Something important failed.
@@ -81,6 +95,7 @@ class OIDCAuthenticationCallbackView(View):
             # Get the nonce from the dictionary for further processing and delete the entry to
             # prevent replay attacks.
             nonce = request.session['oidc_states'][state]['nonce']
+            code_verifier = request.session['oidc_states'][state]['code_verifier']
             del request.session['oidc_states'][state]
 
             # Authenticating is slow, so save the updated oidc_states.
@@ -94,6 +109,7 @@ class OIDCAuthenticationCallbackView(View):
             kwargs = {
                 'request': request,
                 'nonce': nonce,
+                'code_verifier': code_verifier,
             }
 
             self.user = auth.authenticate(**kwargs)
@@ -155,6 +171,12 @@ class OIDCAuthenticationRequestView(View):
         reverse_url = self.get_settings('OIDC_AUTHENTICATION_CALLBACK_URL',
                                         'oidc_authentication_callback')
 
+        code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
+        code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
+        code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+        code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
+        code_challenge = code_challenge.replace('=', '')
+
         params = {
             'response_type': 'code',
             'scope': self.get_settings('OIDC_RP_SCOPES', 'openid email'),
@@ -164,6 +186,8 @@ class OIDCAuthenticationRequestView(View):
                 reverse(reverse_url)
             ),
             'state': state,
+            'code_challenge': code_challenge,
+            'code_challenge_method': 'S256',
         }
 
         params.update(self.get_extra_params(request))
@@ -174,7 +198,7 @@ class OIDCAuthenticationRequestView(View):
                 'nonce': nonce
             })
 
-        add_state_and_nonce_to_session(request, state, params)
+        add_state_and_nonce_to_session(request, state, params, code_verifier)
 
         request.session['oidc_login_next'] = get_next_url(request, redirect_field_name)
 

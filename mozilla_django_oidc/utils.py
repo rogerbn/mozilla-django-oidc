@@ -58,9 +58,9 @@ def is_authenticated(user):
     return user.is_authenticated
 
 
-def add_state_and_nonce_to_session(request, state, params):
+def add_state_and_nonce_to_session(request, state, params, code_verifier):
     """
-    Stores the `state` and `nonce` parameters in a session dictionary including the time when it
+    Stores the `state` and `nonce` and `code_verifier` parameters in a session dictionary including the time when it
     was added. The dictionary can contain multiple state/nonce combinations to allow parallel
     logins with multiple browser sessions.
     To keep the session space to a reasonable size, the dictionary is kept at 50 state/nonce
@@ -99,5 +99,6 @@ def add_state_and_nonce_to_session(request, state, params):
 
     request.session['oidc_states'][state] = {
         'nonce': nonce,
+        'code_verifier' : code_verifier,
         'added_on': time.time(),
     }

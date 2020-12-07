@@ -257,6 +257,7 @@ class OIDCAuthenticationBackend(ModelBackend):
 
         state = self.request.GET.get('state')
         code = self.request.GET.get('code')
+        code_verifier = kwargs.pop('code_verifier', None)
         nonce = kwargs.pop('nonce', None)
 
         if not code or not state:
@@ -267,7 +268,7 @@ class OIDCAuthenticationBackend(ModelBackend):
 
         token_payload = {
             'client_id': self.OIDC_RP_CLIENT_ID,
-            'code_verifier': 'lIxklyV8zVWZHgbp0rP6pQr0qob6pdvilEJXIgjKzwDedOWwEioaw',
+            'code_verifier': code_verifier,
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': absolutify(
