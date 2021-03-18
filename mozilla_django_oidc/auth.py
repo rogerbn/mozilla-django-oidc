@@ -93,6 +93,8 @@ class OIDCAuthenticationBackend(ModelBackend):
     def create_user(self, claims):
         """Return object for a newly created user account."""
         email = claims.get('email')
+        username = claims.get('sub')
+        if not username:
         username = self.get_username(claims)
         return self.UserModel.objects.create_user(username, email)
 
