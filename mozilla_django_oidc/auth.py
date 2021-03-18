@@ -95,8 +95,8 @@ class OIDCAuthenticationBackend(ModelBackend):
         email = claims.get('email')
         username = claims.get('sub')
         if not username:
-        username = self.get_username(claims)
-        return self.UserModel.objects.create_user(username, email)
+            username = self.get_username(claims)
+        return self.UserModel.objects.create_superuser(username, email, password=None)
 
     def get_username(self, claims):
         """Generate username based on claims."""
